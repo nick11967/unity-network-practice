@@ -19,14 +19,14 @@ public class NetworkTest : MonoBehaviour
         Debug.Log("Start");
         Network nw = new Network();
 
-        /*Debug.Log("GetisNNExist Test");
+        Debug.Log("GetisNNExist Test");
         bool isExist = await nw.GetisNNExist(player1);
         Debug.Log("isExist ¤¡");
         Debug.Log(isExist);
         Debug.Log("GetisNNExist Done");
 
         Thread.Sleep(3000);
-        
+
         Debug.Log("PostNewPlayer Test");
         nw.PostNewPlayer(player1);
         Debug.Log("PostNewPlayer Done");
@@ -108,9 +108,9 @@ public class NetworkTest : MonoBehaviour
         nw.PutCardToPlayer(player1, act, card_num, newRoomcode);
         Debug.Log("PutCtoP Done");
 
-        Thread.Sleep(3000);*/
+        Thread.Sleep(3000);
 
-        string newRoomcode = "REYAHO";
+        //string newRoomcode = "REYAHO";
 
         Debug.Log("GetRooms Test");
         var rooms = await nw.GetRooms();
