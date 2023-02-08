@@ -16,11 +16,6 @@ public class Network
     }
 
     // POST
-    /// <summary>
-    /// 货肺款 规阑 积己钦聪促.
-    /// </summary>
-    /// <param name="player_num"></param>
-    /// <returns>room_code</returns>
     public async Task<string> PostNewRoom(int player_num)
     {
         string room_code = "";
@@ -52,11 +47,6 @@ public class Network
         string url = address + "/players/?nickname=" + nickname;
 
         UnityWebRequest request = UnityWebRequest.Post(url, form);
-        
-        /*byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes(json);
-        request.uploadHandler = (UploadHandler)new UploadHandlerRaw(jsonToSend);
-        request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
-        request.SetRequestHeader("accept", "application/json");*/
 
         var op = request.SendWebRequest();
         while (!op.isDone)
@@ -69,7 +59,7 @@ public class Network
     }
 
     // GET
-    public async Task<string> GetNewRoomCode(string nickname)
+    /*public async Task<string> GetNewRoomCode(string nickname)
     {
         string room_code = null;
         string url = address + "/rooms/players/?nickname=" + nickname;
@@ -94,7 +84,7 @@ public class Network
         }
 
         return room_code;
-    }
+    }*/
     public async Task<Dictionary<string, object>> GetRooms()
     {
         var dict = new Dictionary<string, object>();
