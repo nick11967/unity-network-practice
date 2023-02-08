@@ -5,6 +5,8 @@ using UnityEngine.Networking;
 using MiniJSON;
 using System.IO;
 using System.Threading.Tasks;
+using UnityEditor.UIElements;
+using System;
 
 public class Network
 {
@@ -88,8 +90,9 @@ public class Network
     public async Task<Dictionary<string, object>> GetRooms()
     {
         var dict = new Dictionary<string, object>();
+        string url = address + "/rooms/";
 
-        UnityWebRequest request = UnityWebRequest.Get(address + "/rooms/");
+        UnityWebRequest request = UnityWebRequest.Get(url);
 
         var op = request.SendWebRequest();
         while (!op.isDone)
@@ -110,9 +113,10 @@ public class Network
     }
     public async Task<int> GetTurninfo(string room_code)
     {
-        int turninfo = 0;
+        int turninfo = -1;
+        string url = address + "/rooms/?room_code=" + room_code + "/turninfo/";
 
-        UnityWebRequest request = UnityWebRequest.Get(address + "/rooms/" + room_code + "/turninfo/"); // 에러 시 주소 확인
+        UnityWebRequest request = UnityWebRequest.Get(url);
 
         var op = request.SendWebRequest();
         while (!op.isDone)
@@ -121,9 +125,7 @@ public class Network
         if (request.error == null)
         {
             Debug.Log(request.downloadHandler.text);
-            var jsonString = request.downloadHandler.text;
-            var dict = Json.Deserialize(jsonString) as Dictionary<string, object>;
-            turninfo = (int)dict["turninfo"];
+            turninfo = Int32.Parse(request.downloadHandler.text);
         }
         else
         {
@@ -135,8 +137,9 @@ public class Network
     public async Task<Dictionary<string, object>> GetRoomInfo(string room_code)
     {
         var dict = new Dictionary<string, object>();
+        string url = address + "/rooms/?room_code=" + room_code;
 
-        UnityWebRequest request = UnityWebRequest.Get(address + "/rooms/" + room_code);
+        UnityWebRequest request = UnityWebRequest.Get(url);
 
         var op = request.SendWebRequest();
         while (!op.isDone)
