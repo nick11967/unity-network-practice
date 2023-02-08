@@ -24,7 +24,7 @@ public class Network
 
         WWWForm form = new WWWForm();
         form.headers["Accept"] = "application/json";
-        string url = address + "/rooms/?player_num=" + player_num;
+        string url = address + "/rooms/" + player_num;
 
         UnityWebRequest request = UnityWebRequest.Post(url, form);
 
@@ -46,7 +46,7 @@ public class Network
     {
         WWWForm form = new WWWForm();
         form.headers["Accept"] = "application/json";
-        string url = address + "/players/?nickname=" + nickname;
+        string url = address + "/players/" + nickname;
 
         UnityWebRequest request = UnityWebRequest.Post(url, form);
 
@@ -114,7 +114,7 @@ public class Network
     public async Task<int> GetTurninfo(string room_code)
     {
         int turninfo = -1;
-        string url = address + "/rooms/?room_code=" + room_code + "/turninfo/";
+        string url = address + "/rooms/" + room_code + "/turninfo/";
 
         UnityWebRequest request = UnityWebRequest.Get(url);
 
@@ -137,7 +137,7 @@ public class Network
     public async Task<Dictionary<string, object>> GetRoomInfo(string room_code)
     {
         var dict = new Dictionary<string, object>();
-        string url = address + "/rooms/?room_code=" + room_code;
+        string url = address + "/rooms/" + room_code;
 
         UnityWebRequest request = UnityWebRequest.Get(url);
 
@@ -161,8 +161,9 @@ public class Network
     public async Task<Dictionary<string, object>> GetPlayerInfo(string nickname)
     {
         var dict = new Dictionary<string, object>();
+        string url = address + "/players/" + nickname;
 
-        UnityWebRequest request = UnityWebRequest.Get(address + "/players/" + nickname);
+        UnityWebRequest request = UnityWebRequest.Get(url);
 
         var op = request.SendWebRequest();
         while (!op.isDone)
@@ -184,8 +185,9 @@ public class Network
     public async Task<bool> GetisRoomFull(string room_code)
     {
         bool isfull = false;
+        string url = address + "/rooms/" + room_code + "/isfull/";
 
-        UnityWebRequest request = UnityWebRequest.Get(address + "/rooms/" + room_code);
+        UnityWebRequest request = UnityWebRequest.Get(url);
 
         var op = request.SendWebRequest();
         while (!op.isDone)
@@ -194,11 +196,11 @@ public class Network
         if (request.error == null)
         {
             Debug.Log(request.downloadHandler.text);
-            var jsonString = request.downloadHandler.text;
-            var dict = Json.Deserialize(jsonString) as Dictionary<string, object>;
-            int player_num = (int)dict["player_num"];
-            if (player_num == 4)
+            string result = request.downloadHandler.text;
+            if (result == "true")
             { isfull = true; }
+            else 
+            { isfull = false; }
         }
         else
         {
@@ -210,7 +212,7 @@ public class Network
     public async Task<bool> GetisNNExist(string nickname)
     {
         bool isexist = false;
-        string url = address + "/players/?nickname=" + nickname;
+        string url = address + "/players/" + nickname;
     
         UnityWebRequest request = UnityWebRequest.Get(url);
 
@@ -239,7 +241,9 @@ public class Network
     // PUT
     public async void PutPlayerToRoom(string room_code, string nickname)
     {
-        UnityWebRequest request = UnityWebRequest.Put(address + "/rooms/" + room_code, nickname);
+        string url = address + "/rooms/" + room_code + "/?nickname=" + nickname;
+        string str = "";
+        UnityWebRequest request = UnityWebRequest.Put(url, str);
 
         var op = request.SendWebRequest();
         while (!op.isDone)
@@ -253,7 +257,7 @@ public class Network
         while (!op.isDone)
         { await Task.Yield(); }
     }
-    public async void PutCardToPlayer(string nickname, int act, int card)  // str 추가 예정
+    public async void PutCardToPlayer(string nickname, int act, int card) 
     {
         string str = "";
         UnityWebRequest request = UnityWebRequest.Put(address, str);
