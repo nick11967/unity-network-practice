@@ -35,7 +35,7 @@ public class Network
         if (request.error == null)
         { 
             Debug.Log(request.downloadHandler.text);
-            room_code = request.downloadHandler.text;
+            room_code = request.downloadHandler.text.Replace("\"","");
         }
         else
         { Debug.Log("error"); }
@@ -101,7 +101,11 @@ public class Network
         if (request.error == null)
         {
             Debug.Log(request.downloadHandler.text);
-            var jsonString = request.downloadHandler.text;
+            string jsonString = request.downloadHandler.text;
+            /*int firstIndex = jsonString.IndexOf("\"");            
+            jsonString = jsonString.Remove(firstIndex, "\"".Length);
+            int lastIndex = jsonString.IndexOf("\"");
+            jsonString = jsonString.Remove(lastIndex, "\"".Length);*/
             dict = Json.Deserialize(jsonString) as Dictionary<string, object>;
         }
         else
@@ -251,16 +255,21 @@ public class Network
     }
     public async void PutTurnEnd(string room_code)
     {
-        UnityWebRequest request = UnityWebRequest.Put(address + "/" + room_code, room_code);
+        string str = "";
+        string url = address + "/rooms/" + room_code + "/turnend/";
+
+        UnityWebRequest request = UnityWebRequest.Put(url, str);
 
         var op = request.SendWebRequest();
         while (!op.isDone)
         { await Task.Yield(); }
     }
-    public async void PutCardToPlayer(string nickname, int act, int card) 
+    public async void PutCardToPlayer(string nickname, int act, int card_num, string room_code) 
     {
         string str = "";
-        UnityWebRequest request = UnityWebRequest.Put(address, str);
+        string url = address + "/players/" + nickname + "/cards/" 
+            + "?act=" + act + "&card_num=" + card_num + "&room_code=" + room_code;
+        UnityWebRequest request = UnityWebRequest.Put(url, str);
 
         var op = request.SendWebRequest();
         while (!op.isDone)
