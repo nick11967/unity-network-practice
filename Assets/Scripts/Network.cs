@@ -1,13 +1,8 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using System.IO;
 using System.Threading.Tasks;
-using UnityEditor.UIElements;
 using System;
-using UnityEngine.EventSystems;
-using System.Linq;
 
 public class Network
 {
@@ -18,6 +13,13 @@ public class Network
         public string nickname;
         public string room_code;
         public List<int> cards;
+
+        public Player(string nickname, string room_code, List<int> cards)
+        {
+            this.nickname = nickname;
+            this.room_code = room_code;
+            this.cards = cards;
+        }
     }
 
     public struct Room
@@ -41,7 +43,7 @@ public class Network
     }
 
     // POST
-    public async Task<string> PostNewRoom(int player_num,string room_title)
+    public async Task<string> PostNewRoom(int player_num, string room_title)
     {
         string room_code = "";
 
@@ -56,9 +58,9 @@ public class Network
         { await Task.Yield(); }
 
         if (request.error == null)
-        { 
+        {
             Debug.Log(request.downloadHandler.text);
-            room_code = request.downloadHandler.text.Replace("\"","");
+            room_code = request.downloadHandler.text.Replace("\"", "");
         }
         else
         { Debug.Log("error"); }
@@ -152,7 +154,7 @@ public class Network
         {
             Debug.Log(request.downloadHandler.text);
             var jsonString = request.downloadHandler.text;
-            //room = JsonUtility.FromJson<Room>(jsonString);
+            room = StoJRoom(jsonString);
         }
         else
         {
@@ -177,12 +179,8 @@ public class Network
             Debug.Log(request.downloadHandler.text);
 
             string jsonString = request.downloadHandler.text;
-            int firstIndex = jsonString.IndexOf("\"");
-            jsonString = jsonString.Remove(firstIndex, "\"".Length);
-            int lastIndex = jsonString.LastIndexOf("\"");
-            jsonString = jsonString.Remove(lastIndex, "\"".Length);
 
-            //players.Add(JsonConvert.DeserializeObject<Player>(jsonString));
+            players = StoJPlayers(jsonString);
         }
         else
         {
@@ -232,7 +230,7 @@ public class Network
             string result = request.downloadHandler.text;
             if (result == "true")
             { isfull = true; }
-            else 
+            else
             { isfull = false; }
         }
         else
@@ -246,7 +244,7 @@ public class Network
     {
         bool isexist = false;
         string url = address + "/players/" + nickname;
-    
+
         UnityWebRequest request = UnityWebRequest.Get(url);
 
         var op = request.SendWebRequest();
@@ -258,7 +256,7 @@ public class Network
         {
             Debug.Log("success");
             Debug.Log(request.downloadHandler.text);
-            if(request.downloadHandler.text == "true")
+            if (request.downloadHandler.text == "true")
             { isexist = true; }
             else
             { isexist = false; }
@@ -293,10 +291,10 @@ public class Network
         while (!op.isDone)
         { await Task.Yield(); }
     }
-    public async void PutCardToPlayer(string nickname, int act, int card_num, string room_code) 
+    public async void PutCardToPlayer(string nickname, int act, int card_num, string room_code)
     {
         string str = "";
-        string url = address + "/players/" + nickname + "/cards/" 
+        string url = address + "/players/" + nickname + "/cards/"
             + "?act=" + act + "&card_num=" + card_num + "&room_code=" + room_code;
         UnityWebRequest request = UnityWebRequest.Put(url, str);
 
@@ -322,24 +320,27 @@ public class Network
         while (!op.isDone)
         { await Task.Yield(); }
     }
-    
-    
+
+
     // JsonString to struct
     private List<Room> StoJRooms(string str)
     {
-        List<Room> rooms = new List<Room>();
+        if (str.Length == 2)
+        {
+            return new List<Room>();
+        }
 
-        List<string> strs = new List<string>();
+        List<Room> rooms = new List<Room>();
 
         int firstindex = -1, lastindex = -1;
         int count = 0;
 
-        for(int i = 0; i < str.Length; i++)
+        for (int i = 0; i < str.Length; i++)
         {
-            if(str[i] == '{')
+            if (str[i] == '{')
             {
                 count++;
-                if(firstindex == -1)
+                if (firstindex == -1)
                 {
                     firstindex = i;
                 }
@@ -347,19 +348,13 @@ public class Network
             else if (str[i] == '}')
             {
                 count--;
-                if(count == 0)
+                if (count == 0)
                 {
                     lastindex = i;
-                    strs.Add(str.Substring(firstindex, lastindex - firstindex + 1));
+                    rooms.Add(StoJRoom(str.Substring(firstindex, lastindex - firstindex + 1)));
                     firstindex = lastindex = -1;
                 }
             }
-        }
-
-        for(int i = 0; i < strs.Count; i++)
-        {
-            Debug.Log(strs[i]);
-            rooms.Add(StoJRoom(strs[i]));
         }
 
         return rooms;
@@ -369,7 +364,6 @@ public class Network
     {
         string temp;
         int firstindex, lastindex;
-
 
         string code;
         string title;
@@ -382,44 +376,126 @@ public class Network
         firstindex = str.IndexOf("[");
         lastindex = str.IndexOf(']');
         temp = str.Substring(firstindex + 1, lastindex - firstindex - 1);
-        Debug.Log("temp: " + temp);
-        string[] deckS = temp.Split(",");
         deck = new List<int>();
-        for(int i=0;i<deckS.Length; i++)
+        if (temp.Length > 0)
         {
-            deck.Add(Int32.Parse(deckS[i]));
+            string[] deckS = temp.Split(",");
+            for (int i = 0; i < deckS.Length; i++)
+            {
+                deck.Add(Int32.Parse(deckS[i]));
+            }
         }
 
-        str = str.Substring(lastindex + 1);
+        str = str.Substring(lastindex + 2);
 
         //code
-        firstindex = str.IndexOf("\"");
-        str.Remove(firstindex, 1);
+        code = str.Substring(8, 6);
 
-        code = "";
+        str = str.Substring(str.IndexOf(",") + 1);
 
         //title
-        title = "";
+        firstindex = str.IndexOf(",");
+        title = str.Substring(9, firstindex - 10);
+
+        str = str.Substring(firstindex + 1);
 
         //player_num
-        player_num = 0;
+        firstindex = str.IndexOf(",");
+        player_num = Int32.Parse(str.Substring(13, firstindex - 13));
+
+        str = str.Substring(firstindex + 1);
 
         //turninfo
-        turninfo = 0;
+        firstindex = str.IndexOf(",");
+        turninfo = Int32.Parse(str.Substring(11, firstindex - 11));
+
+        firstindex = str.IndexOf("[");
+        str = str.Substring(firstindex);
+        firstindex = str.LastIndexOf("}");
+        str = str.Remove(firstindex);
 
         //players
         players = new List<Player>();
+        if (str.Length != 2)
+        {
+            firstindex = str.IndexOf("{");
+            while (firstindex >= 0)
+            {
+                firstindex = str.IndexOf("{");
+                lastindex = str.IndexOf("}");
+                if(firstindex < 0)
+                    break;
+                players.Add(StoJPlayer(str.Substring(firstindex, lastindex - firstindex + 1)));
+                str = str.Substring(lastindex + 1);
+            }
+        }
 
+        //create room with above data
         Room room = new Room(code, title, deck, player_num, turninfo, players);
 
         return room;
     }
 
+    private List<Player> StoJPlayers(string str)
+    {
+        if (str.Length == 2)
+        {
+            return new List<Player>();
+        }
+
+        List<Player> players = new List<Player>();
+
+        int firstindex = -1, lastindex = -1;
+
+        firstindex = str.IndexOf("{");
+        while (firstindex >= 0)
+        {
+            firstindex = str.IndexOf("{");
+            lastindex = str.IndexOf("}");
+            if (firstindex < 0)
+                break;
+            Debug.Log(str.Substring(firstindex, lastindex - firstindex + 1));
+            players.Add(StoJPlayer(str.Substring(firstindex, lastindex - firstindex + 1)));
+            str = str.Substring(lastindex + 1);
+        }
+
+        return players;
+    }
+
     private Player StoJPlayer(string str)
     {
-        Player player = new Player();
+        string temp;
+        int firstindex, lastindex;
 
+        string nickname;
+        string room_code;
+        List<int> cards;
 
+        //nickname
+        firstindex = str.IndexOf(",");
+        nickname = str.Substring(13, firstindex - 14);
+
+        str = str.Substring(firstindex + 1);
+
+        //room_code
+        room_code = str.Substring(13, 6);
+
+        str = str.Substring(str.IndexOf(",") + 1);
+
+        //cards
+        firstindex = str.IndexOf("[");
+        lastindex = str.IndexOf(']');
+        temp = str.Substring(firstindex + 1, lastindex - firstindex - 1);
+        cards = new List<int>();
+        if (temp.Length > 0)
+        {
+            string[] deckS = temp.Split(",");
+            for (int i = 0; i < deckS.Length; i++)
+            {
+                cards.Add(Int32.Parse(deckS[i]));
+            }
+        }
+        Player player = new Player(nickname, room_code, cards);
 
         return player;
     }
