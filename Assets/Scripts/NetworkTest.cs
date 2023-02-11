@@ -34,7 +34,7 @@ public class NetworkTest : MonoBehaviour
         Thread.Sleep(3000);
 
         Debug.Log("PostNewRoom Test");
-        var newRoomcode = await nw.PostNewRoom(4);
+        var newRoomcode = await nw.PostNewRoom(4, "title");
         Debug.Log("newRoomcode ¤¡");
         Debug.Log(newRoomcode);
         Debug.Log("PostNewRoom Done");
